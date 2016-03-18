@@ -146,13 +146,13 @@ function expressionParser(string) {
     var parseResult
     if (parseResult = spaceParser(string)) string = parseResult[1]
     parseResult = functionCallParser(string)
-    if (parseResult == null) throw new Error ("Syntax Error")
+    if (parseResult == null) throw new Error("Syntax Error")
     tokenArray.push(parseResult[0])
     string = parseResult[1]
     while (string[0] != ")") {
         if (parseResult = spaceParser(string)) string = parseResult[1]
         parseResult = elementParser(string)
-        if (parseResult == null) throw new Error ("Element not found")
+        if (parseResult == null) throw new Error("Element not found")
         tokenArray.push(parseResult[0])
         string = parseResult[1]
         if (parseResult = spaceParser(string)) string = parseResult[1]
@@ -172,7 +172,7 @@ function programParser(string) {
     if (parseResult = spaceParser(string)) string = parseResult[1]
     while (string.length != 0) {
         parseResult = expressionParser(string)
-        if (parseResult == null) throw new Error ("Invalid Expression")
+        if (parseResult == null) throw new Error("Invalid Expression")
         programArray.push(parseResult[0])
         string = parseResult[1]
         parseResult = spaceParser(string)
@@ -183,6 +183,15 @@ function programParser(string) {
 }
 
 //console.log(programParser(input))
+
+function isIdentifier(element) {
+    if (typeof element == "string") {
+        if (element[0] != '"') return true
+    }
+    return false
+}
+
+//console.log(isIdentifier(array[1]))
 
 
 // Add function
@@ -223,7 +232,7 @@ function multiply(array) {
 function divide(array) {
     function notZero(x) {
         x = Number(x)
-        if (!x) throw new Error ("Divide by zero")
+        if (!x) throw new Error("Divide by zero")
         return x
     }
     var quotient = array.reduce(function(a,b) {
@@ -237,7 +246,7 @@ function divide(array) {
 //GreaterThan function
 
 function greaterThan(array) {
-    if (array.length == 0) throw new Error ("Too few arguments")
+    if (array.length == 0) throw new Error("Too few arguments")
     if (array.length == 1) return true
     var first = array.shift()
     var rest = array
@@ -250,7 +259,7 @@ function greaterThan(array) {
 //LesserThan function
 
 function lessThan(array) {
-    if (array.length == 0) throw new Error ("Too few arguments")
+    if (array.length == 0) throw new Error("Too few arguments")
     if (array.length == 1) return true
     var first = array.shift()
     var rest = array
@@ -263,7 +272,7 @@ function lessThan(array) {
 //EqualTo function
 
 function isEqual(array) {
-    if (array.length == 0) throw new Error ("Too few arguments")
+    if (array.length == 0) throw new Error("Too few arguments")
     if (array.length == 1) return true
     var first = array.shift()
     var rest = array
@@ -288,7 +297,7 @@ function greaterThanEqualTo(array) {
 //LesserThan or EqualTo function
 
 function lessThanEqualTo(array) {
-    if (array.length == 0) throw new Error ("Too few arguments")
+    if (array.length == 0) throw new Error("Too few arguments")
     if (array.length == 1) return true
     var first = array.shift()
     var rest = array
@@ -312,7 +321,6 @@ function define(array) {
     
 }
 
-var array = [1,'x']
 //define(array)
 //console.log(globalEnv)
 
@@ -330,28 +338,43 @@ var operatorEnv = {
 
 //console.log(operatorEnv)
 
-function evalExpression(array) {
-    var first = array.shift()   
-    var rest = array   
-    if (operatorEnv.hasOwnProperty(first)) {
-        if (rest.every(element => typeof element == "number")) return operatorEnv[first](rest)
-    }
+var specialforms = {
+    'define' : define
 }
 
+function replaceIdentifier(array) {
+    for (var i in array) {
+        if (isIdentifier(array[i])) array[i] = globalEnv[array[i]]
+    }
+}
+var array = [['define','x',10],['+','x',10]]
+//console.log(replaceIdentifier(array))
+
+function evalExpression(array) {
+    var first = array.shift()   
+    var rest = array
+    if (operatorEnv.hasOwnProperty(first)) {
+        replaceIdentifier(rest)
+        return operatorEnv[first](rest)
+    }
+    if (specialforms.hasOwnProperty(first)) return specialforms[first](rest)
+    throw new Error("Invalid argument")
+}
 
 //console.log(evalExpression(array))
 
-
-function isIdentifier(element) {
-    if (typeof element == "string") {
-        if (element[0] != '"') return true
-    }
-    return false
+function evalProgram(array) {
+    if (Array.isArray(array))
+        for (var i in array) {
+            array[i] = evalExpression(array[i])
+        }
+        return array
 }
 
+console.log(evalProgram(array))
 
 
-//console.log(isIdentifier(array[1]))
+
 
 
 
